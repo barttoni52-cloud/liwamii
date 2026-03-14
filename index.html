@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="LIWAMI">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#FF1493">
+    <title>LIWAMI 🎮 Jeu Éducatif</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0; padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #FF1493;
+            --secondary: #00CED1;
+            --success: #32CD32;
+            --warning: #FFD700;
+            --danger: #FF6B6B;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(135deg, #FFD700, #FF69B4, #87CEEB, #98FB98);
+            background-size: 300% 300%;
+            animation: gradientShift 12s ease infinite;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: calc(var(--safe-top) + 10px) 12px calc(var(--safe-bottom) + 10px);
+        }
+
+        @keyframes gradientShift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* FLOATING EMOJIS */
+        .floating-emoji {
+            position: fixed;
+            pointer-events: none;
+            font-size: clamp(1.2em, 3vw, 2em);
+            animation: floatAnim var(--dur, 6s) ease-in-out infinite;
+            opacity: 0.4;
+            z-index: 0;
+        }
+
+        @keyframes floatAnim {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50%       { transform: translateY(-22px) rotate(12deg); }
+        }
+
+        /* ============================
+           SCREEN SYSTEM
+        ============================ */
+        .screen { display: none; width: 100%; max-width: 480px; z-index: 10; }
+        .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+        /* ============================
+           WELCOME SCREEN
+        ============================ */
+        .welcome-card {
+            background: rgba(255,255,255,0.97);
+            border-radius: 36px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.22), 0 4px 16px rgba(0,0,0,0.1);
+            width: 100%;
+            padding: 30px 22px 26px;
+            text-align: center;
+            animation: cardEntry 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes cardEntry {
+            from { opacity: 0; transform: translateY(40px) scale(0.92); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* MASCOT */
+        .mascot-wrap {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .mascot-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%;
+            height: 120%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,20,147,0.18) 0%, transparent 70%);
+            animation: glowPulse 2.5s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1);   opacity: 0.7; }
+            50%       { transform: translate(-50%, -50%) scale(1.2); opacity: 1;   }
+        }
+
+        .mascot-emoji {
+            font-size: clamp(3.8em, 14vw, 5.5em);
+            display: block;
+            animation: mascotBounce 2.8s ease-in-out infinite;
+            filter: drop-shadow(0 6px 14px rgba(255,20,147,0.28));
+        }
+
+        @keyframes mascotBounce {
+            0%, 100% { transform: translateY(0) rotate(-4deg) scale(1);    }
+            50%       { transform: translateY(-12px) rotate(4deg) scale(1.05); }
+        }
+
+        /* LIWAMI TITLE */
+        .liwami-title {
+            font-family: 'Comfortaa', cursive;
+            font-size: clamp(3em, 13vw, 4.5em);
+            font-weight: 700;
+            display: flex;
+            justify-content: center;
+            gap: 3px;
+            margin-bottom: 5px;
+        }
+
+        .liwami-title span {
+            display: inline-block;
+            animation: letterDance 3.2s ease-in-out infinite;
+        }
+
+        .liwami-title span:nth-child(1) { color: #FF1493; animation-delay: 0s;    }
+        .liwami-title span:nth-child(2) { color: #FF7700; animation-delay: 0.14s; }
+        .liwami-title span:nth-child(3) { color: #00CED1; animation-delay: 0.28s; }
+        .liwami-title span:nth-child(4) { color: #32CD32; animation-delay: 0.42s; }
+        .liwami-title span:nth-child(5) { color: #9370DB; animation-delay: 0.56s; }
+        .liwami-title span:nth-child(6) { color: #FFB800; animation-delay: 0.70s; }
+
+        @keyframes letterDance {
+            0%, 100% { transform: translateY(0); }
+            20%       { transform: translateY(-9px); }
+            40%       { transform: translateY(0); }
+        }
+
+        .liwami-tagline {
+            font-size: clamp(0.76em, 2.5vw, 0.93em);
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+
+        /* STARS DECO */
+        .deco-stars {
+            display: flex;
+            justify-content: center;
+            gap: 7px;
+            margin-bottom: 20px;
+        }
+
+        .deco-star {
+            font-size: clamp(0.95em, 3.2vw, 1.3em);
+            animation: starTwinkle 2s ease-in-out infinite;
+        }
+
+        .deco-star:nth-child(1){ animation-delay:0s;    }
+        .deco-star:nth-child(2){ animation-delay:0.28s; }
+        .deco-star:nth-child(3){ animation-delay:0.56s; }
+        .deco-star:nth-child(4){ animation-delay:0.84s; }
+        .deco-star:nth-child(5){ animation-delay:1.12s; }
+
+        @keyframes starTwinkle {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.75; }
+            50%       { transform: scale(1.35) rotate(18deg); opacity: 1; }
+        }
+
+        /* GAME PREVIEWS */
+        .game-previews {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .preview-card {
+            background: linear-gradient(135deg, #FFF5FB, #F0FDFF);
+            border: 2.5px solid #f0ddf5;
+            border-radius: 20px;
+            padding: 14px 6px;
+            cursor: pointer;
+            transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+            -webkit-user-select: none; user-select: none;
+        }
+
+        .preview-card:active { transform: scale(0.9); }
+
+        .preview-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 28px rgba(255,20,147,0.16);
+            border-color: var(--primary);
+        }
+
+        .preview-emoji {
+            font-size: clamp(1.9em, 7.5vw, 2.8em);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .preview-label {
+            font-size: clamp(0.64em, 2.1vw, 0.76em);
+            font-weight: 700;
+            color: #666;
+        }
+
+        /* START BUTTON */
+        .btn-start {
+            width: 100%;
+            padding: 17px 20px;
+            font-size: clamp(1.08em, 3.8vw, 1.3em);
+            font-weight: 700;
+            border: none;
+            border-radius: 22px;
+            cursor: pointer;
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(135deg, var(--primary), #FF69B4, var(--secondary));
+            background-size: 200% 200%;
+            animation: btnGradient 3s ease infinite;
+            color: white;
+            box-shadow: 0 10px 32px rgba(255,20,147,0.36);
+            -webkit-user-select: none; user-select: none;
+            letter-spacing: 0.4px;
+        }
+
+        @keyframes btnGradient {
+            0%   { background-position: 0% 50%;   }
+            50%  { background-position: 100% 50%;  }
+            100% { background-position: 0% 50%;   }
+        }
+
+        .btn-start:active { transform: scale(0.95); box-shadow: 0 5px 16px rgba(255,20,147,0.26); }
+
+        /* FOOTER */
+        .welcome-footer {
+            margin-top: 14px;
+            font-size: clamp(0.63em, 2vw, 0.74em);
+            color: rgba(255,255,255,0.88);
+            font-weight: 600;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.18);
+        }
+
+        /* INSTALL BANNER */
+        .install-banner {
+            display: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 14px;
+            padding: 11px 14px;
+            margin-top: 12px;
+            font-size: 0.79em;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(255,20,147,0.3);
+            width: 100%;
+        }
+
+        .install-banner.visible { display: block; }
+
+        /* ============================
+           GAME SCREEN
+        ============================ */
+        .app {
+            background: rgba(255,255,255,0.97);
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 480px;
+            max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 20px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px 15px;
+            position: relative;
+            z-index: 10;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            animation: cardEntry 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .app::-webkit-scrollbar { display: none; }
+
+        /* GAME HEADER */
+        .game-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .back-btn {
+            background: #f5f5f5;
+            border: none;
+            border-radius: 13px;
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: transform 0.2s;
+            -webkit-user-select: none; user-select: none;
+        }
+
+        .back-btn:active { transform: scale(0.86); }
+
+        .game-brand {
+            font-family: 'Comfortaa', cursive;
+            font-size: clamp(1.15em, 4vw, 1.5em);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        /* PROGRESS */
+        .progress-wrap {
+            background: #f0f0f0;
+            border-radius: 20px;
+            height: 9px;
+            margin-bottom: 11px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--success));
+            border-radius: 20px;
+            transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1);
+            width: 0%;
+        }
+
+        /* MODE SELECTOR */
+        .mode-selector {
+            display: grid;
+            grid-template-columns: repeat(3,1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .mode-btn {
+            padding: 9px 5px;
+            border: 2.5px solid #e0e0e0;
+            background: white;
+            border-radius: 15px;
+            font-size: clamp(0.66em, 2.2vw, 0.8em);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.24s cubic-bezier(0.34,1.56,0.64,1);
+            font-family: 'Fredoka', sans-serif;
+            color: #555;
+            line-height: 1.3;
+            -webkit-user-select: none; user-select: none;
+        }
+
+        .mode-btn:active { transform: scale(0.91); }
+
+        .mode-btn.active {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary), #FF69B4);
+            color: white;
+            box-shadow: 0 5px 14px rgba(255,20,147,0.28);
+        }
+
+        /* DIFFICULTY */
+        .difficulty-selector {
+            display: flex;
+            gap: 7px;
+            justify-content: center;
+            margin-bottom: 11px;
+        }
+
+        .diff-btn {
+            padding: 6px 12px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: clamp(0.66em, 2vw, 0.78em);
+            font-family: 'Fredoka', sans-serif;
+            color: #555;
+            transition: all 0.22s ease;
+            -webkit-user-select: none; user-select: none;
+        }
+
+        .diff-btn.active {
+            background: var(--warning);
+            border-color: #e6c000;
+            color: white;
+            box-shadow: 0 4px 10px rgba(255,215,0,0.38);
+        }
+
+        .diff-btn:active { transform: scale(0.9); }
+
+        /* SCORE BOARD */
+        .score-board {
+            display: grid;
+            grid-template-columns: repeat(3,1fr);
+            gap: 7px;
+            margin-bottom: 12px;
+        }
+
+        .score-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 8px 4px;
+            border-radius: 13px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+        }
+
+        .score-card h3 {
+            font-size: clamp(0.5em, 1.6vw, 0.65em);
+            opacity: 0.9;
+            margin-bottom: 2px;
+        }
+
+        .score-card .value {
+            font-size: clamp(1.25em, 4vw, 1.65em);
+            font-weight: 700;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e8e8e8, transparent);
+            margin: 6px 0 11px;
+        }
+
+        /* GAME CONTENT */
+        .game-content { display: none; animation: fadeInUp 0.32s ease; }
+        .game-content.active { display: block; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-question {
+            font-size: clamp(1.05em, 3.8vw, 1.4em);
+            color: var(--primary);
+            margin-bottom: 13px;
+            font-weight: 700;
+            text-align: center;
+            min-height: 40px;
+        }
+
+        /* COLORS */
+        .color-options {
+            display: grid;
+            grid-template-columns: repeat(2,1fr);
+            gap: 10px;
+            margin-bottom: 11px;
+        }
+
+        .color-box {
+            width: 100%;
+            aspect-ratio: 1.15;
+            border-radius: 18px;
+            cursor: pointer;
+            border: 4px solid transparent;
+            transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+            font-size: clamp(0.78em, 2.5vw, 1em);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-shadow: 1px 2px 5px rgba(0,0,0,0.35);
+            box-shadow: 0 5px 14px rgba(0,0,0,0.15);
+            -webkit-user-select: none; user-select: none;
+        }
+
+        .color-box:active { transform: scale(0.92); }
+        .color-box.correct { border-color: var(--success); box-shadow: 0 0 0 4px var(--success); animation: correctPulse 0.45s ease; }
+        .color-box.wrong   { border-color: var(--danger); animation: shake 0.42s ease; }
+
+        /* SHAPES */
+        .shapes-container {
+            display: grid;
+            grid-template-columns: repeat(2,1fr);
+            gap: 10px;
+            margin-bottom: 11px;
+        }
+
+        .shape-box {
+            padding: 15px 8px;
+            border: 3px solid #ddd;
+            border-radius: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 84px;
+            transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+            background: white;
+            -webkit-user-select: none; user-select: none;
+        }
+
+        .shape-box:active { transform: scale(0.91); }
+        .shape-box.correct { border-color: var(--success); background: #D4EDDA; box-shadow: 0 0 0 3px var(--success); animation: correctPulse 0.45s ease; }
+        .shape-box.wrong   { border-color: var(--danger); background: #F8D7DA; animation: shake 0.42s ease; }
+        .shape { font-size: clamp(2.3em, 9vw, 3.4em); }
+
+        /* NUMBERS */
+        .numbers-display {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .number-visual {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: flex-start;
+            justify-content: center;
+            max-width: 130px;
+        }
+
+        .dot {
+            width: clamp(24px, 6vw, 34px);
+            height: clamp(24px, 6vw, 34px);
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 3px 8px rgba(255,20,147,0.3);
+            animation: dotPop 0.38s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        @keyframes dotPop {
+            0%   { transform: scale(0);    }
+            60%  { transform: scale(1.12); }
+            100% { transform: scale(1);    }
+        }
+
+        .math-operator {
+            font-size: clamp(1.5em, 5vw, 2em);
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .math-options {
+            display: grid;
+            grid-template-columns: repeat(3,1fr);
+            gap: 8px;
+            margin-bottom: 11px;
+        }
+
+        .number-btn {
+            padding: clamp(11px,3.5vw,18px) 5px;
+            font-size: clamp(1.3em,4.6vw,1.75em);
+            font-weight: 700;
+            border: 2.5px solid var(--secondary);
+            background: linear-gradient(135deg, #E0F6FF, #D0F8FF);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+            color: var(--secondary);
+            font-family: 'Fredoka', sans-serif;
+            -webkit-user-select: none; user-select: none;
+        }
+
+        .number-btn:active { transform: scale(0.91); }
+        .number-btn.correct { background: linear-gradient(135deg, var(--success), #66FF66); border-color: var(--success); color: white; box-shadow: 0 0 0 3px var(--success); animation: correctPulse 0.45s ease; }
+        .number-btn.wrong   { background: linear-gradient(135deg, var(--danger), #FF8A8A); border-color: var(--danger); color: white; animation: shake 0.42s ease; }
+
+        /* FEEDBACK */
+        .feedback {
+            font-size: clamp(0.9em, 3vw, 1.15em);
+            margin: 7px 0;
+            min-height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 13px;
+            font-weight: 700;
+            padding: 7px 9px;
+            text-align: center;
+        }
+
+        .feedback.success { background: linear-gradient(135deg, #D4EDDA, #C3E6CB); color: #155724; }
+        .feedback.error   { background: linear-gradient(135deg, #F8D7DA, #F5C6CB); color: #721C24; }
+
+        /* BUTTONS */
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 9px;
+        }
+
+        .btn {
+            padding: clamp(10px,2.8vw,13px) clamp(15px,4.2vw,22px);
+            font-size: clamp(0.8em,2.5vw,0.93em);
+            font-weight: 700;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+            font-family: 'Fredoka', sans-serif;
+            -webkit-user-select: none; user-select: none;
+            min-height: 46px;
+        }
+
+        .btn:active { transform: scale(0.92); }
+        .btn-primary   { background: linear-gradient(135deg, var(--primary), #FF69B4); color: white; box-shadow: 0 5px 14px rgba(255,20,147,0.28); }
+        .btn-secondary { background: linear-gradient(135deg, var(--secondary), #00CED1); color: white; box-shadow: 0 5px 14px rgba(0,206,209,0.28); }
+
+        /* CONGRATS */
+        .congrats { display: none; text-align: center; padding: 16px 6px; animation: zoomIn 0.46s ease; }
+        .congrats.show { display: block; }
+
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.82); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .congrats h2 {
+            font-family: 'Comfortaa', cursive;
+            font-size: clamp(1.35em, 5.5vw, 2em);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 7px;
+        }
+
+        .stars-display {
+            font-size: clamp(2.2em, 9vw, 3.4em);
+            margin: 11px 0;
+            letter-spacing: 7px;
+            animation: starBounce 1.5s ease infinite;
+        }
+
+        @keyframes starBounce {
+            0%, 100% { transform: scale(1);   }
+            50%       { transform: scale(1.1); }
+        }
+
+        .final-score-text {
+            font-size: clamp(1.05em, 3.4vw, 1.3em);
+            color: #555;
+            margin: 7px 0;
+            font-weight: 700;
+        }
+
+        .badges-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .badge {
+            padding: 11px 15px;
+            background: linear-gradient(135deg, var(--warning), #FFE4B5);
+            border-radius: 13px;
+            font-size: clamp(1.45em, 5.5vw, 1.9em);
+            transition: opacity 0.3s;
+        }
+
+        /* VOLUME BUTTON */
+        .vol-btn {
+            position: fixed;
+            top: calc(var(--safe-top) + 12px);
+            right: 16px;
+            z-index: 200;
+            background: white;
+            border-radius: 50%;
+            width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+            font-size: 1.25em;
+            border: none;
+            -webkit-user-select: none; user-select: none;
+            transition: transform 0.2s;
+        }
+
+        .vol-btn:active { transform: scale(0.86); }
+        .vol-btn.muted  { background: #FFE4E1; }
+
+        /* ANIMATIONS */
+        @keyframes correctPulse {
+            0%   { transform: scale(1);    }
+            40%  { transform: scale(1.07); }
+            100% { transform: scale(1);    }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0);   }
+            20%       { transform: translateX(-9px); }
+            60%       { transform: translateX(9px);  }
+        }
+    </style>
+</head>
+<body>
+
+<div id="floatingEmojis"></div>
+
+<button class="vol-btn" id="volBtn" onclick="toggleSound()" aria-label="Son">🔊</button>
+
+<!-- ===== WELCOME SCREEN ===== -->
+<div id="welcomeScreen" class="screen active">
+    <div class="welcome-card">
+
+        <div class="mascot-wrap">
+            <div class="mascot-glow"></div>
+            <span class="mascot-emoji">🦁</span>
+        </div>
+
+        <div class="liwami-title">
+            <span>L</span><span>I</span><span>W</span><span>A</span><span>M</span><span>I</span>
+        </div>
+
+        <p class="liwami-tagline">Le jeu éducatif des enfants malins ✨</p>
+
+        <div class="deco-stars">
+            <span class="deco-star">⭐</span>
+            <span class="deco-star">🌟</span>
+            <span class="deco-star">⭐</span>
+            <span class="deco-star">🌟</span>
+            <span class="deco-star">⭐</span>
+        </div>
+
+        <div class="game-previews">
+            <div class="preview-card" onclick="startWithMode('colors')">
+                <span class="preview-emoji">🎨</span>
+                <div class="preview-label">Couleurs</div>
+            </div>
+            <div class="preview-card" onclick="startWithMode('numbers')">
+                <span class="preview-emoji">🔢</span>
+                <div class="preview-label">Chiffres</div>
+            </div>
+            <div class="preview-card" onclick="startWithMode('shapes')">
+                <span class="preview-emoji">⬛</span>
+                <div class="preview-label">Formes</div>
+            </div>
+        </div>
+
+        <button class="btn-start" onclick="startGame()">
+            🚀 Jouer maintenant !
+        </button>
+
+    </div>
+
+    <div class="install-banner" id="installBanner" onclick="installApp()">
+        📱 Installer LIWAMI sur ton téléphone ✨
+    </div>
+
+    <p class="welcome-footer">Apprends en t'amusant • Pour les 3-7 ans 🌈</p>
+</div>
+
+<!-- ===== GAME SCREEN ===== -->
+<div id="gameScreen" class="screen">
+    <div class="app" id="appContainer">
+
+        <div class="game-header">
+            <button class="back-btn" onclick="goHome()" aria-label="Accueil">🏠</button>
+            <div class="game-brand">LIWAMI 🎮</div>
+            <div style="width:40px"></div>
+        </div>
+
+        <div class="progress-wrap">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" id="modeColors"  onclick="selectMode('colors', this)">🎨<br>Couleurs</button>
+            <button class="mode-btn"        id="modeNumbers" onclick="selectMode('numbers', this)">🔢<br>Chiffres</button>
+            <button class="mode-btn"        id="modeShapes"  onclick="selectMode('shapes', this)">⬛<br>Formes</button>
+        </div>
+
+        <div class="difficulty-selector">
+            <button class="diff-btn active" onclick="setDifficulty('easy', this)">⭐ Facile</button>
+            <button class="diff-btn"        onclick="setDifficulty('medium', this)">⭐⭐ Moyen</button>
+            <button class="diff-btn"        onclick="setDifficulty('hard', this)">⭐⭐⭐ Difficile</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="score-board">
+            <div class="score-card">
+                <h3>📊 Bonnes</h3>
+                <div class="value" id="scoreDisplay">0</div>
+            </div>
+            <div class="score-card">
+                <h3>📈 Question</h3>
+                <div class="value" id="progressDisplay">0/10</div>
+            </div>
+            <div class="score-card">
+                <h3>💯 Score</h3>
+                <div class="value" id="percentDisplay">0%</div>
+            </div>
+        </div>
+
+        <!-- COLORS -->
+        <div id="colorsGame" class="game-content active">
+            <div class="game-question">
+                Clique sur le <span id="colorName" style="color:blue;">bleu</span>!
+            </div>
+            <div class="color-options" id="colorOptions"></div>
+            <div class="feedback" id="colorFeedback"></div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="nextQuestion()">Suivant ➡️</button>
+                <button class="btn btn-secondary" onclick="restartGame()">🔄 Restart</button>
+            </div>
+        </div>
+
+        <!-- NUMBERS -->
+        <div id="numbersGame" class="game-content">
+            <div class="game-question">Combien en tout?</div>
+            <div class="numbers-display" id="numbersDisplay"></div>
+            <div class="math-options" id="mathOptions"></div>
+            <div class="feedback" id="mathFeedback"></div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="nextQuestion()">Suivant ➡️</button>
+                <button class="btn btn-secondary" onclick="restartGame()">🔄 Restart</button>
+            </div>
+        </div>
+
+        <!-- SHAPES -->
+        <div id="shapesGame" class="game-content">
+            <div class="game-question">
+                Clique sur le <span id="shapeName">carré</span>!
+            </div>
+            <div class="shapes-container" id="shapesContainer"></div>
+            <div class="feedback" id="shapeFeedback"></div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="nextQuestion()">Suivant ➡️</button>
+                <button class="btn btn-secondary" onclick="restartGame()">🔄 Restart</button>
+            </div>
+        </div>
+
+        <!-- CONGRATS -->
+        <div id="congrats" class="congrats">
+            <h2>🎉 BRAVO! Tu as réussi! 🎉</h2>
+            <div class="stars-display">⭐⭐⭐</div>
+            <div class="final-score-text">Score: <strong id="finalScore">0</strong>/10</div>
+            <div class="badges-row">
+                <div class="badge" id="badge1">🏆</div>
+                <div class="badge" id="badge2">🎖️</div>
+                <div class="badge" id="badge3">👑</div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary"   onclick="restartGame()">🎮 Rejouer!</button>
+                <button class="btn btn-secondary" onclick="goHome()">🏠 Accueil</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// ============ DATA ============
+const COLORS = [
+    { name:'rouge',  hex:'#FF0000', label:'Rouge'  },
+    { name:'bleu',   hex:'#0055FF', label:'Bleu'   },
+    { name:'jaune',  hex:'#FFD700', label:'Jaune'  },
+    { name:'vert',   hex:'#00AA00', label:'Vert'   },
+    { name:'rose',   hex:'#FF69B4', label:'Rose'   },
+    { name:'orange', hex:'#FF8C00', label:'Orange' },
+    { name:'violet', hex:'#8A2BE2', label:'Violet' },
+    { name:'gris',   hex:'#808080', label:'Gris'   },
+    { name:'marron', hex:'#8B4513', label:'Marron' },
+    { name:'noir',   hex:'#222222', label:'Noir'   }
+];
+
+const SHAPES = [
+    { name:'carré',    emoji:'⬛', label:'Carré'    },
+    { name:'cercle',   emoji:'⭕', label:'Cercle'   },
+    { name:'triangle', emoji:'🔺', label:'Triangle' },
+    { name:'étoile',   emoji:'⭐', label:'Étoile'   },
+    { name:'coeur',    emoji:'❤️', label:'Cœur'     },
+    { name:'lune',     emoji:'🌙', label:'Lune'     }
+];
+
+const TOTAL = 10;
+const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+
+// ============ STATE ============
+let mode='colors', difficulty='easy';
+let score=0, questionCount=0;
+let currentQuestion=null, answered=false;
+let soundOn=true, deferredInstall=null, audioCtx=null;
+
+// ============ SCREENS ============
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function startGame() {
+    showScreen('gameScreen');
+    resetState();
+    syncModeButtons();
+    generateQuestion();
+    updateUI();
+}
+
+function startWithMode(m) {
+    mode = m;
+    startGame();
+}
+
+function goHome() {
+    playSound('click');
+    showScreen('welcomeScreen');
+}
+
+function syncModeButtons() {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    const map = { colors:'modeColors', numbers:'modeNumbers', shapes:'modeShapes' };
+    document.getElementById(map[mode]).classList.add('active');
+
+    document.querySelectorAll('.game-content').forEach(el => el.classList.remove('active'));
+    document.getElementById('congrats').classList.remove('show');
+    const gameMap = { colors:'colorsGame', numbers:'numbersGame', shapes:'shapesGame' };
+    document.getElementById(gameMap[mode]).classList.add('active');
+}
+
+// ============ AUDIO ============
+function getCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+}
+
+function playSound(type) {
+    if (!soundOn) return;
+    try {
+        const ctx = getCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        const cfg = { correct:{f:800,d:0.18,v:0.24}, wrong:{f:280,d:0.22,v:0.2}, click:{f:600,d:0.09,v:0.14}, success:{f:950,d:0.35,v:0.26} }[type] || {f:500,d:0.1,v:0.14};
+        const t = ctx.currentTime;
+        gain.gain.setValueAtTime(cfg.v, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t+cfg.d);
+        osc.frequency.value = cfg.f;
+        osc.start(t); osc.stop(t+cfg.d);
+    } catch(e) {}
+}
+
+function toggleSound() {
+    soundOn = !soundOn;
+    const btn = document.getElementById('volBtn');
+    btn.textContent = soundOn ? '🔊' : '🔇';
+    btn.classList.toggle('muted', !soundOn);
+}
+
+// ============ BACKGROUND EMOJIS ============
+function createFloatingEmojis() {
+    const wrap = document.getElementById('floatingEmojis');
+    const list = ['🎨','🎲','📚','⭐','🎉','🎯','🌈','🦋','🌸','🍭'];
+    for (let i=0; i<8; i++) {
+        const el = document.createElement('div');
+        el.className = 'floating-emoji';
+        el.textContent = list[i % list.length];
+        el.style.left = (Math.random()*90)+'%';
+        el.style.top  = (Math.random()*88)+'%';
+        el.style.setProperty('--dur', (5+Math.random()*5)+'s');
+        el.style.animationDelay = (Math.random()*3)+'s';
+        wrap.appendChild(el);
+    }
+}
+
+// ============ MODE & DIFFICULTY ============
+function selectMode(newMode, btn) {
+    mode = newMode; score=0; questionCount=0; answered=false;
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.game-content').forEach(el=>el.classList.remove('active'));
+    document.getElementById('congrats').classList.remove('show');
+    const gameMap = { colors:'colorsGame', numbers:'numbersGame', shapes:'shapesGame' };
+    document.getElementById(gameMap[mode]).classList.add('active');
+    playSound('click'); updateUI(); generateQuestion();
+}
+
+function setDifficulty(level, btn) {
+    difficulty = level;
+    document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    playSound('click');
+}
+
+// ============ QUESTIONS ============
+function generateQuestion() {
+    if      (mode==='colors')  generateColorQ();
+    else if (mode==='numbers') generateMathQ();
+    else if (mode==='shapes')  generateShapeQ();
+}
+
+// COLORS
+function generateColorQ() {
+    const n = difficulty==='easy'?4 : difficulty==='medium'?5 : 6;
+    const s = shuffle(COLORS);
+    currentQuestion = { correct:s[0], options:shuffle(s.slice(0,n)) };
+    renderColorQ();
+}
+
+function renderColorQ() {
+    const q = currentQuestion;
+    const nameEl = document.getElementById('colorName');
+    nameEl.textContent = q.correct.label.toLowerCase();
+    nameEl.style.color  = q.correct.hex;
+    const c = document.getElementById('colorOptions');
+    c.innerHTML = '';
+    c.style.gridTemplateColumns = q.options.length>4 ? 'repeat(3,1fr)' : 'repeat(2,1fr)';
+    q.options.forEach(col => {
+        const box = document.createElement('div');
+        box.className = 'color-box';
+        box.style.background = col.hex;
+        box.textContent = col.label;
+        box.addEventListener('click', () => { if(!answered){answered=true; handleResult(box, col.name===q.correct.name, 'colorFeedback');} });
+        c.appendChild(box);
+    });
+    clearFeedback('colorFeedback'); answered=false;
+}
+
+// SHAPES
+function generateShapeQ() {
+    const n = difficulty==='easy'?4 : difficulty==='medium'?5 : 6;
+    const s = shuffle(SHAPES);
+    currentQuestion = { correct:s[0], options:shuffle(s.slice(0,n)) };
+    renderShapeQ();
+}
+
+function renderShapeQ() {
+    const q = currentQuestion;
+    document.getElementById('shapeName').textContent = q.correct.label.toLowerCase();
+    const c = document.getElementById('shapesContainer');
+    c.innerHTML = '';
+    c.style.gridTemplateColumns = q.options.length>4 ? 'repeat(3,1fr)' : 'repeat(2,1fr)';
+    q.options.forEach(sh => {
+        const box = document.createElement('div'); box.className='shape-box';
+        const s = document.createElement('div'); s.className='shape'; s.textContent=sh.emoji;
+        box.appendChild(s);
+        box.addEventListener('click', () => { if(!answered){answered=true; handleResult(box, sh.name===q.correct.name, 'shapeFeedback');} });
+        c.appendChild(box);
+    });
+    clearFeedback('shapeFeedback'); answered=false;
+}
+
+// NUMBERS
+function generateMathQ() {
+    const max = difficulty==='easy'?5 : difficulty==='medium'?7 : 10;
+    const n1=Math.floor(Math.random()*max)+1, n2=Math.floor(Math.random()*max)+1;
+    const correct=n1+n2;
+    const opts=new Set([correct]);
+    while(opts.size<3){ const w=Math.floor(Math.random()*(max*2))+1; if(w!==correct) opts.add(w); }
+    currentQuestion = { num1:n1, num2:n2, correct, options:shuffle([...opts]) };
+    renderMathQ();
+}
+
+function renderMathQ() {
+    const q = currentQuestion;
+    const d = document.getElementById('numbersDisplay');
+    d.innerHTML = '';
+    const makeVis = n => {
+        const v=document.createElement('div'); v.className='number-visual';
+        for(let i=0;i<n;i++){ const dot=document.createElement('div'); dot.className='dot'; v.appendChild(dot); }
+        return v;
+    };
+    d.appendChild(makeVis(q.num1));
+    const op=document.createElement('div'); op.className='math-operator'; op.textContent='+'; d.appendChild(op);
+    d.appendChild(makeVis(q.num2));
+    const c=document.getElementById('mathOptions');
+    c.innerHTML='';
+    q.options.forEach(num => {
+        const btn=document.createElement('button'); btn.className='number-btn'; btn.textContent=num;
+        btn.addEventListener('click', () => { if(!answered){answered=true; handleResult(btn, num===q.correct, 'mathFeedback', `La réponse était ${q.correct}`);} });
+        c.appendChild(btn);
+    });
+    clearFeedback('mathFeedback'); answered=false;
+}
+
+// ============ RESULT ============
+function handleResult(el, isCorrect, fbId, wrongMsg='Réessaye!') {
+    const fb=document.getElementById(fbId);
+    if (isCorrect) {
+        score++;
+        el.classList.add('correct');
+        fb.className='feedback success'; fb.textContent='✅ Correct! Bravo! 🌟';
+        playSound('correct');
+    } else {
+        el.classList.add('wrong');
+        fb.className='feedback error'; fb.textContent=`❌ Oups! ${wrongMsg}`;
+        playSound('wrong');
+    }
+    updateUI();
+}
+
+function clearFeedback(id) {
+    const fb=document.getElementById(id); fb.className='feedback'; fb.textContent='';
+}
+
+// ============ NAVIGATION ============
+function nextQuestion() {
+    questionCount++;
+    updateUI();
+    if (questionCount>=TOTAL) { showCongrats(); playSound('success'); }
+    else generateQuestion();
+}
+
+function showCongrats() {
+    document.querySelectorAll('.game-content').forEach(el=>el.classList.remove('active'));
+    document.getElementById('congrats').classList.add('show');
+    document.getElementById('finalScore').textContent = score;
+    const pct=(score/TOTAL)*100;
+    ['badge1','badge2','badge3'].forEach((id,i) => {
+        document.getElementById(id).style.opacity = pct>=70?'1' : (pct>=50&&i<2)?'1' : i===0?'1':'0.3';
+    });
+    document.getElementById('appContainer').scrollTop = 0;
+}
+
+function resetState() {
+    score=0; questionCount=0; answered=false;
+    document.getElementById('congrats').classList.remove('show');
+}
+
+function restartGame() {
+    resetState();
+    syncModeButtons();
+    updateUI();
+    generateQuestion();
+}
+
+function updateUI() {
+    document.getElementById('scoreDisplay').textContent    = score;
+    document.getElementById('progressDisplay').textContent = `${questionCount}/${TOTAL}`;
+    const pct=Math.round((questionCount/TOTAL)*100);
+    document.getElementById('percentDisplay').textContent  = pct+'%';
+    document.getElementById('progressFill').style.width    = pct+'%';
+}
+
+// ============ PWA ============
+window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); deferredInstall=e;
+    document.getElementById('installBanner').classList.add('visible');
+});
+
+function installApp() {
+    if(!deferredInstall) return;
+    deferredInstall.prompt();
+    deferredInstall.userChoice.then(()=>{ deferredInstall=null; document.getElementById('installBanner').classList.remove('visible'); });
+}
+
+// ============ INIT ============
+window.addEventListener('load', createFloatingEmojis);
+
+document.addEventListener('touchend', e => {
+    const t=e.target;
+    if (t.tagName==='BUTTON' || ['color-box','shape-box','number-btn','mode-btn','diff-btn','preview-card','btn-start','back-btn'].some(c=>t.classList.contains(c)))
+        e.preventDefault();
+}, { passive:false });
+</script>
+</body>
+</html>
